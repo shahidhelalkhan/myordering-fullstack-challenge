@@ -216,3 +216,43 @@ state and handle the unhappy paths.
 3. Tests on both sides. Backend: the `coupons` suite green plus your own cases.
    Frontend: at least the cart logic and one component.
 4. A commit history that shows the work progressing — not one squashed commit.
+
+---
+
+## API reference
+
+Base URL: `http://localhost:4000/api`. The full contract, including validation
+order and every error code, is in [`API_SPEC.md`](API_SPEC.md).
+
+### Auth
+
+There is no authentication: every route is public. The challenge is scoped to
+the ordering flow, not to user accounts.
+
+### Routes
+
+| Method | Route           | Purpose                           | Success | Errors |
+| ------ | --------------- | --------------------------------- | ------- | ------ |
+| `GET`  | `/health`       | Liveness check                    | `200`   |        |
+| `GET`  | `/products`     | List products with price and stock | `200`  |        |
+| `GET`  | `/products/:id` | One product                       | `200`   | `404 PRODUCT_NOT_FOUND` |
+| `POST` | `/orders`       | Create an order, optional coupon  | `201`   | `422 INVALID_ORDER`, `PRODUCT_NOT_FOUND`, `INSUFFICIENT_STOCK`, `INVALID_COUPON` |
+
+Every success body is `{ "data": ..., "code": "SUCCESS" }`; every error body is
+`{ "code", "message", "details"? }`. Unknown routes return `404 NOT_FOUND` and
+malformed JSON returns `400 BAD_REQUEST`. Money is always integer cents.
+
+### Example requests
+
+```bash
+# List products
+curl http://localhost:4000/api/products
+
+# Create an order with a coupon
+curl -X POST http://localhost:4000/api/orders \
+  -H 'Content-Type: application/json' \
+  -d '{"items": [{"productId": "prod_margherita", "quantity": 2}], "couponCode": "HAPPYHRS"}'
+```
+
+`POST /orders` ships as a stub that returns `501 NOT_IMPLEMENTED`; implementing
+it is the backend half of the challenge.
