@@ -11,7 +11,16 @@ import { formatCents } from "../lib/money";
 export default function ProductGrid() {
   const { data: products, isLoading, isError, error, refetch } = useProducts();
   const addLine = useCart((s) => s.addLine);
+  const lines = useCart((s) => s.lines)
+  const inCart = (id) => {
+    const line = lines.find((l) => l.productId === id);
 
+    if (!line) {
+      return 0;
+    }
+
+    return line.quantity;
+  };
   if (isLoading) {
     return <div className="asg-panel asg-muted">Loading menu…</div>;
   }
@@ -39,10 +48,10 @@ export default function ProductGrid() {
               <span className="asg-price">{formatCents(p.priceCents)}</span>
               <button
                 className="asg-btn"
-                disabled={p.stock <= 0}
+                disabled={p.stock <= 0 || inCart(p.id) >= p.stock}
                 onClick={() => addLine(p, 1)}
               >
-                {p.stock <= 0 ? "Sold out" : "Add"}
+                {p.stock <= 0 ? "Sold out" : inCart(p.id) >= p.stock ? "Max in cart" : "Add"}
               </button>
             </div>
           </div>

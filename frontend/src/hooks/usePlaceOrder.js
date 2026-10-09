@@ -15,13 +15,23 @@ import { api } from "../api/client";
  *     ("INVALID_COUPON", "INSUFFICIENT_STOCK", "NETWORK", ...). The screen
  *     needs enough to show a useful message.
  */
+
+export function buildOrderPayload(lines, couponCode) {
+  const payload = {
+    items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
+  };
+  const code = (couponCode || "").trim();
+  if (code) payload.couponCode = code;
+  return payload;
+}
+
 export function usePlaceOrder() {
   const queryClient = useQueryClient();
 
   return useMutation((payload) => api.placeOrder(payload), {
     // TODO
-    onSuccess: () => {
-      queryClient.invalidateQueries("products");
+    onSettled: () => {
+      queryClient.invalidateQueries("products")
     },
   });
 }

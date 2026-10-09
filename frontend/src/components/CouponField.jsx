@@ -18,7 +18,8 @@ import React from "react";
  * Props are yours to design. `onChange(code)` lifting the value up is the
  * minimum.
  */
-export default function CouponField({ value, onChange, status }) {
+export default function CouponField({ value, onChange, status = { state: "idle" } }) {
+  const rejected = status.state === "rejected";
   return (
     <div className="asg-coupon">
       <label className="asg-label" htmlFor="coupon">
@@ -31,8 +32,21 @@ export default function CouponField({ value, onChange, status }) {
         onChange={(e) => onChange && onChange(e.target.value)}
         placeholder="e.g. HAPPYHRS"
         autoComplete="off"
+        disabled={status.state === "pending"}
+        aria-invalid={rejected}
+        aria-describedby="coupon-msg"
       />
       {/* TODO: reflect `status` — idle / pending / applied / rejected(reason) */}
+       <p
+        id="coupon-msg"
+        role={rejected ? "alert" : undefined}
+        className={rejected ? "asg-err" : "asg-muted"}
+      >
+        {status.state === "pending" && "Checking code…"}
+        {rejected && status.message}
+        {status.state === "idle" &&
+          (value ? "Checked when you place the order." : "Optional — 10% off.")}
+      </p>
     </div>
   );
 }

@@ -138,6 +138,9 @@
   padding: 10px 12px;
   font-size: 14px;
 }
+.asg-btn--primary:hover {
+  background: var(--asg-accent);
+}
 .asg-btn--primary:hover:not(:disabled) {
   filter: brightness(0.94);
 }
@@ -174,4 +177,51 @@
 }
 .asg-ok {
   border-color: var(--asg-ok);
+}
+.asg-lines {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.asg-line {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--asg-border);
+}
+.asg-line__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.asg-line__name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.asg-line__total {
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 56px;
+  text-align: right;
+}
+.asg-qty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.asg-qty__n {
+  min-width: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+.asg-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.asg-coupon p {
+  margin: 6px 0 0;
 }

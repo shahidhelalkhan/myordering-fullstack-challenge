@@ -25,22 +25,42 @@ export const useCart = create(
       addLine: (product, quantity = 1) => {
         // TODO: if a line for product.id already exists, increase its quantity
         //       instead of adding a second line.
-        set((state) => ({
-          lines: [
-            ...state.lines,
-            {
-              productId: product.id,
-              name: product.name,
-              priceCents: product.priceCents,
-              quantity,
-            },
-          ],
-        }));
+        set((state) => {
+          const exists = state.lines.some((l) => l.productId === product.id);
+          if (exists) {
+            return {
+              lines: state.lines.map((l) =>
+                l.productId === product.id
+                  ? { ...l, quantity: l.quantity + quantity }
+                  : l
+              ),
+            };
+          }
+          return {
+            lines: [
+              ...state.lines,
+              {
+                productId: product.id,
+                name: product.name,
+                priceCents: product.priceCents,
+                quantity,
+              },
+            ],
+          };
+        });
       },
 
       setQuantity: (productId, quantity) => {
-        // TODO: set the line's quantity; if quantity <= 0 remove the line.
-        throw new Error("setQuantity not implemented");
+        if (!(quantity > 0)) {
+          get().removeLine(productId);
+          return;
+        }
+        const q = Math.floor(quantity);
+        set((state) => ({
+          lines: state.lines.map((l) =>
+            l.productId === productId ? { ...l, quantity: q } : l
+          ),
+        }));
       },
 
       removeLine: (productId) =>
@@ -59,9 +79,8 @@ export const selectCount = (state) =>
   state.lines.reduce((n, l) => n + l.quantity, 0);
 
 /**
- * Subtotal in integer cents.
+ * Subtotal in integer cents. 
  * TODO: implement. Must stay integer — no floating point.
  */
-export const selectSubtotalCents = (state) => {
-  throw new Error("selectSubtotalCents not implemented");
-};
+export const selectSubtotalCents = (state) => 
+  state.lines.reduce((sum, l) => sum + l.priceCents * l.quantity, 0);

@@ -12,12 +12,37 @@ import { formatCents } from "../lib/money";
 export default function OrderSummary({ order, onDone }) {
   if (!order) return null;
   return (
-    <div className="asg-panel asg-ok">
+    <div className="asg-panel asg-ok" role="status">
       <h2 className="asg-panel__title">Order placed</h2>
-      {/* TODO: id, items, subtotal / discount / total, "new order" button */}
-      <pre className="asg-muted" style={{ whiteSpace: "pre-wrap" }}>
-        {JSON.stringify(order, null, 2)}
-      </pre>
+      <p className="asg-muted">
+        Order <code>{order.id}</code>
+      </p>
+      <ul className="asg-lines">
+        {order.items.map((i) => (
+          <li key={i.productId} className="asg-line">
+            <div className="asg-line__info">
+              <span className="asg-line__name">
+                {i.quantity} × {i.name}
+              </span>
+            </div>
+            <span className="asg-line__total">{formatCents(i.lineTotalCents)}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="asg-total-row">
+        <span>Subtotal</span>
+        <span>{formatCents(order.subtotalCents)}</span>
+      </div>
+      {order.couponApplied && (
+        <div className="asg-total-row">
+          <span>Promo {order.couponCode}</span>
+          <span>−{formatCents(order.discountCents)}</span>
+        </div>
+      )}
+      <div className="asg-total-row">
+        <strong>Total</strong>
+        <strong data-testid="order-total">{formatCents(order.totalCents)}</strong>
+      </div>
       <button className="asg-btn" onClick={onDone}>
         New order
       </button>

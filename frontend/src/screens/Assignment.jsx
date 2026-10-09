@@ -5,6 +5,8 @@ import CouponField from "../components/CouponField";
 import OrderSummary from "../components/OrderSummary";
 import { useCart, selectCount } from "../store/cart";
 import { usePlaceOrder } from "../hooks/usePlaceOrder";
+import { buildOrderPayload } from "../hooks/usePlaceOrder";
+import { getErrorMessage } from "../lib/errorMessages";
 
 /**
  * The ordering screen. This composes the pieces; the interesting wiring is
@@ -26,12 +28,43 @@ export default function Assignment() {
   const clear = useCart((s) => s.clear);
 
   const [coupon, setCoupon] = useState("");
+  const [order, setOrder] = useState(null);
   const placeOrder = usePlaceOrder();
 
+  const { error, isLoading } = placeOrder;
+  const couponRejected = Boolean(error && error.code === "INVALID_COUPON");
+ 
+
+  let couponStatus = { state: "idle" };
+  if (isLoading && coupon.trim()) {
+    couponStatus = { state: "pending" };
+  } else if (couponRejected) {
+    couponStatus = {
+      state: "rejected",
+      message: `“${(error.details && error.details.couponCode) || coupon}” isn’t a valid promo code.`,
+    };
+  }
+
+ 
   // TODO: build payload from `lines` (+ coupon) and call placeOrder.mutate(...)
+  const onCouponChange = (value) => {
+    setCoupon(value);
+    if (couponRejected) placeOrder.reset(); 
+  };
+
   const onPlaceOrder = () => {
-    // eslint-disable-next-line no-alert
-    alert("Place order not wired up yet — see src/screens/Assignment.jsx");
+    placeOrder.mutate(buildOrderPayload(lines, coupon), {
+      onSuccess: (created) => {
+        setOrder(created);
+        clear();
+      },
+    });
+  };
+
+   const onDone = () => {
+    setOrder(null);
+    setCoupon("");
+    placeOrder.reset();
   };
 
   return (
@@ -48,18 +81,26 @@ export default function Assignment() {
         </section>
 
         <aside className="asg-col asg-col--order">
-          <CartPanel />
-          <CouponField value={coupon} onChange={setCoupon} status="idle" />
-          <button
-            className="asg-btn asg-btn--primary"
-            disabled={lines.length === 0}
-            onClick={onPlaceOrder}
-          >
-            Place order
-          </button>
-
-          {/* TODO: error area for INSUFFICIENT_STOCK / NETWORK / etc. */}
-          {/* TODO: <OrderSummary order={...} onDone={clear} /> after success */}
+          {order ? (
+            <OrderSummary order={order} onDone={onDone} />
+          ) : (
+            <>
+              <CartPanel disabled={isLoading} />
+              <CouponField value={coupon} onChange={onCouponChange} status={couponStatus}/>
+              <button
+                className="asg-btn asg-btn--primary"
+                disabled={lines.length === 0 || isLoading}
+                onClick={onPlaceOrder}
+              >
+                {isLoading ? "Placing order…" : "Place order"}
+              </button>
+              {error  && !couponRejected && (
+                <p className="asg-panel asg-error" role="alert">
+                  {getErrorMessage(error)}
+                </p>
+              )}
+            </>
+          )}
         </aside>
       </main>
     </div>
